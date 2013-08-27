@@ -102,6 +102,14 @@ describe 'apache', :type => :class do
         'target' => "/etc/apache2/mods-available/#{modname}.conf"
       ) }
     end
+    describe "user/group declared externally" do
+      let :pre_condition do
+        'user { "www-data": ensure => present, gid => "www-data" }
+        group { "www-data": ensure => present }'
+      end
+      it { should contain_user("www-data") }
+      it { should contain_group("www-data") }
+    end
   end
   context "on a RedHat 5 OS" do
     let :facts do
@@ -134,6 +142,14 @@ describe 'apache', :type => :class do
       'notify'  => 'Class[Apache::Service]'
       )
     }
+    describe "user/group declared externally" do
+      let :pre_condition do
+        'user { "apache": ensure => present, gid => "apache" }
+        group { "apache": ensure => present }'
+      end
+      it { should contain_user("apache") }
+      it { should contain_group("apache") }
+    end
     describe "Alternate confd/mod/vhosts directory" do
       let :params do
         {

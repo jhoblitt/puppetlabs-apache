@@ -60,17 +60,16 @@ class apache (
   $logroot    = $apache::params::logroot
 
   # declare the web server user and group
-  # Note: requiring the package means the package ought to create them and not puppet
-  group { $group:
+  # Note: The package should be installed before ensuring that the user/group
+  # exist.  This gives the package the chance to create them instead of puppet.
+  ensure_resource('group', $group, {
     ensure  => present,
-    require => Package['httpd']
-  }
+  })
 
-  user { $user:
+  ensure_resource('user', $user, {
     ensure  => present,
     gid     => $group,
-    require => Package['httpd'],
-  }
+  })
 
   class { 'apache::service':
     service_enable => $service_enable,
