@@ -38,7 +38,9 @@ class apache (
   $conf_template        = $apache::params::conf_template,
   $servername           = $apache::params::servername,
   $user                 = $apache::params::user,
+  $create_user          = true,
   $group                = $apache::params::group,
+  $create_group         = true,
   $keepalive            = $apache::params::keepalive,
 ) inherits apache::params {
 
@@ -55,21 +57,32 @@ class apache (
   if $mpm_module {
     validate_re($mpm_module, '(prefork|worker)')
   }
+  validate_bool($create_user)
+  validate_bool($create_group)
 
   $ports_file = $apache::params::ports_file
   $logroot    = $apache::params::logroot
 
   # declare the web server user and group
-  # Note: requiring the package means the package ought to create them and not puppet
-  group { $group:
-    ensure  => present,
-    require => Package['httpd']
+  # Note: requiring the package means the package ought to create them and not
+  # puppet
+  if $create_group {
+    group { $group:
+      ensure  => present,
+      require => Package['httpd']
+    }
+  } else {
+    Class['Apache'] -> Group[$group]
   }
 
-  user { $user:
-    ensure  => present,
-    gid     => $group,
-    require => Package['httpd'],
+  if $create_user {
+    user { $user:
+      ensure  => present,
+      gid     => $group,
+      require => Package['httpd'],
+    }
+  } else {
+    Class['Apache'] -> Group[$user]
   }
 
   class { 'apache::service':
